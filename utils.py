@@ -47,7 +47,7 @@ fixedin:
 
 # Additional information:
 #  configurations:
-{configurations} 
+{configurations}
 #
 # All available versions:
 #versions
@@ -58,11 +58,11 @@ fixedin:
 
     _, year, cid = cve.cve_id.split('-')
     try:
-        os.makedirs('database/{y}'.format(y=year))
+        os.makedirs('database/java/{y}'.format(y=year))
     except FileExistsError:
         pass
 
-    with open('database/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
+    with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
         g, a = winner['ga'].split(':')
         refs = '    - '.join([x + '\n' for x in cve.references])
         description = ''

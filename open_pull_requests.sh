@@ -32,6 +32,6 @@ for f in ${files}; do
         \"head\": \"${branch}\", \
         \"base\": \"master\" \
     } \
-" https://api.github.com/repos/msrb/cvedb-test/pulls
+" https://api.github.com/repos/fabric8-analytics/cvedb/pulls
 
 done
