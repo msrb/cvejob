@@ -12,6 +12,10 @@ files=$(git status -s | awk '{ print $2 }')
 
 branches=
 for f in ${files}; do
+
+    if [ ! "$f" == "*.yaml" ];
+        continue
+
     git checkout master
 
     number_yaml=$(basename "$f")
