@@ -42,8 +42,8 @@ affected:
       artifactId: {a}
       version:
         - "{v}"
-      fixedin:
-        - "{fixed_in}"
+fixedin:
+    - "{fixed_in}"
 
 # Additional information:
 #  configurations:
