@@ -47,7 +47,7 @@ def run():
             query = query_template.format(product=p, vendor=v)
             print('Query: ' + query)
 
-            cpe2pkg_output = subprocess.check_output('java -jar cpe2pkg.jar "' + query + '"',
+            cpe2pkg_output = subprocess.check_output('java -jar target/cpe2pkg.jar "' + query + '"',
                                                      shell=True,
                                                      universal_newlines=True)
             cpe2pkg_lines = cpe2pkg_output.split('\n')
