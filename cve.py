@@ -1,5 +1,6 @@
 import json
 import subprocess
+import datetime
 from utils import guess_package_name, generate_yaml
 from entry import MitreCVE
 
@@ -13,6 +14,12 @@ def run():
             cve = MitreCVE.from_dict(d)
             print('---')
             print(cve.cve_id)
+
+            now = datetime.datetime.now()
+            age = now.date() - cve.last_modified_date.date()
+            if not cve.last_modified_date or age.days >= 1:
+                # not modified today/yesterday, skipping...
+                continue
 
             if not cve.configurations:
                 # vulnerability still under analysis, skipping...
