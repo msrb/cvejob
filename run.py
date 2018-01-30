@@ -1,7 +1,7 @@
 import json
 import subprocess
 import datetime
-from utils import get_first_sentence, guess_package_name
+from utils import get_first_sentence, guess_package_name, get_versions
 from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
 
@@ -18,7 +18,7 @@ def run():
 
             now = datetime.datetime.now()
             age = now.date() - cve.last_modified_date.date()
-            if not cve.last_modified_date or age.days >= 1:
+            if not cve.last_modified_date or age.days >= 3:
                 # not modified today/yesterday, skipping...
                 continue
 
@@ -71,16 +71,13 @@ def run():
             winner = None
             for result in results:
                 ga = result['ga']
-                with open('packages') as pf:
-                    for line in pf.readlines():
-                        g, a, v = line.split(',')
-                        if '{}:{}'.format(g, a) == ga:
-                            affected = version & set(v.split())
-                            if affected:
-                                print('Hit!')
-                                result['versions'] = list(set(v.split()))
-                                winner = result
-                                break
+                upstream_versions = get_versions(ga)
+                affected = version & set(upstream_versions)
+                if affected:
+                    print('Hit!')
+                    result['versions'] = upstream_versions
+                    winner = result
+                    break
 
             if winner:
                 generate_yaml(cve, winner, results)

@@ -1,7 +1,12 @@
 import re
+import logging
 from collections import OrderedDict
 
 from nltk.tokenize import sent_tokenize
+from lxml import etree
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_first_sentence(description):
@@ -34,3 +39,22 @@ def guess_package_name(description):
     results = list(OrderedDict.fromkeys(results))
 
     return results
+
+
+def get_versions(ga):
+    """Get all versions for given groupId:artifactId."""
+
+    g, a = ga.split(':')
+    g = g.replace('.', '/')
+    url = 'http://repo1.maven.org/maven2/{g}/{a}/maven-metadata.xml'.format(g=g, a=a)
+
+    versions = []
+    try:
+        metadata_xml = etree.parse(url)
+        version_elements = metadata_xml.findall('.//version')
+        versions = [x.text for x in version_elements]
+    except OSError:
+        logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
+        pass
+
+    return versions
