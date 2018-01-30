@@ -1,11 +1,16 @@
 import json
 import subprocess
 import datetime
+import logging
 from collections import OrderedDict
 
 from utils import get_first_sentence, guess_package_name, get_versions
 from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('cvejob')
 
 
 def is_older_than(cve, days):
@@ -72,22 +77,25 @@ def run_cpe2pkg(query):
     return results
 
 
+# TODO: turn into proper CLI app
 def run():
+    # TODO: make configurable
     with open('nvdcve.json') as f:
         data = json.load(f)
 
         for d in data.get('CVE_Items'):
 
             cve = CVE.from_dict(d)
-            print('---')
-            print(cve.cve_id)
+            logger.info('---')
+            logger.info('Found {cve}'.format(cve=cve.cve_id))
 
+            # TODO: make configurable
             if is_older_than(cve, 1):
-                # the CVE is too old, skipping...
+                logger.info('The CVE is too old, skipping...')
                 continue
 
             if not cve.configurations:
-                # vulnerability still under analysis, skipping...
+                logger.info('The vulnerability is still under analysis, skipping...')
                 continue
 
             vendor, product, cpe_versions = get_vendor_product_versions(cve)
@@ -100,7 +108,7 @@ def run():
                 continue
 
             query = construct_lucene_query(vendor, product)
-            print('Query: ' + query)
+            logger.info('Query: {q}'.format(q=query))
 
             results = run_cpe2pkg(query)
 
@@ -115,7 +123,7 @@ def run():
                 # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
                 # if not, this is a false positive
                 if cpe_versions & set(upstream_versions):
-                    print('Hit!')
+                    logger.info('Hit for {ga}'.format(ga=ga))
                     result['versions'] = upstream_versions
                     winner = result
                     break
