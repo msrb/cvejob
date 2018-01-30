@@ -1,0 +1,6 @@
+target/
+database/
+__pycache__
+nvdcve.json
+packages
+.idea/
