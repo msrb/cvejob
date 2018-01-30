@@ -1,88 +1,81 @@
-import json
-import subprocess
 import datetime
-from utils import guess_package_name, generate_yaml
-from entry import MitreCVE
 
 
-def run():
-    with open('nvdcve.json') as f:
-        data = json.load(f)
+class CVE(object):
 
-        for d in data.get('CVE_Items'):
+    VERSION = '4.0'
 
-            cve = MitreCVE.from_dict(d)
-            print('---')
-            print(cve.cve_id)
+    def __init__(self, cve_id, references, descriptions, configurations,
+                 cvss, published_date, last_modified_date):
+        self.cve_id = cve_id
+        self.references = references or []
+        self.descriptions = descriptions or []
+        self.configurations = configurations or {}
+        self.cvss = cvss
+        self.published_date = published_date
+        self.last_modified_date = last_modified_date
 
-            now = datetime.datetime.now()
-            age = now.date() - cve.last_modified_date.date()
-            if not cve.last_modified_date or age.days >= 1:
-                # not modified today/yesterday, skipping...
-                continue
+    @classmethod
+    def from_dict(cls, data):
 
-            if not cve.configurations:
-                # vulnerability still under analysis, skipping...
-                continue
+        date_format = '%Y-%m-%dT%H:%MZ'
+        published_date = datetime.datetime.strptime(data.get('publishedDate'), date_format)
+        last_modified_date = datetime.datetime.strptime(data.get('lastModifiedDate'), date_format)
 
-            vendor = []
-            product = []
-            version = set()
-            for conf in cve.configurations:
-                if not MitreCVE.cpe_is_app(conf):
-                    continue
+        cve_dict = data.get('cve', {})
 
-                ven, prod, ver = MitreCVE.extract_vendor_product_version(conf)
-                vendor.append(ven)
-                product.append(prod)
-                version.add(ver)
-                if cve.configurations[conf]:
-                    version.add(cve.configurations[conf]['version'])
+        # CVE ID
+        cve_id = cve_dict.get('CVE_data_meta', {}).get('ID')
 
-            pkg_name_candidates = set()
-            for description in cve.descriptions:
-                names = guess_package_name(description)
-                pkg_name_candidates.update(names)
+        # References
+        references_data = cve_dict.get('references', {}).get('reference_data', [])
+        references = [x.get('url') for x in references_data]
 
-            product += list(pkg_name_candidates)
-            if not product or not vendor:
-                continue
+        # English description
+        descriptions_data = cve_dict.get('description', {}).get('description_data', [])
+        descriptions = []
+        for description in descriptions_data:
+            if description.get('lang') == 'en':
+                descriptions.append(description.get('value', ''))
+                break
 
-            query_template = 'product:( {product} )  AND  vendor:( {vendor} )'
-            p = ' '.join(product).replace(':', ' ')
-            v = ' '.join(vendor).replace(':', ' ')
-            query = query_template.format(product=p, vendor=v)
-            print('Query: ' + query)
+        # CVSSv2
+        cvss = data.get('impact', {}).get('baseMetricV2', {}).get('cvssV2', {}).get('baseScore')
 
-            cpe2pkg_output = subprocess.check_output('java -jar target/cpe2pkg.jar "' + query + '"',
-                                                     shell=True,
-                                                     universal_newlines=True)
-            cpe2pkg_lines = cpe2pkg_output.split('\n')
-            results = []
+        # Configurations
+        configurations = {}
+        nodes = data.get('configurations', {}).get('nodes', [])
+        for node in nodes:
+            cpes = node.get('cpe', [])
+            for cpe in cpes:
+                if cpe.get('vulnerable', True):
+                    cpe_str = cpe.get('cpe22Uri')
+                    if cpe_str:
+                        configurations[cpe_str] = None
+                    if cpe.get('versionEndIncluding') is not None:
+                        configurations[cpe_str] = {'version': cpe.get('versionEndIncluding'),
+                                                   'kind': 'including'}
+                    elif cpe.get('versionEndExcluding') is not None:
+                        configurations[cpe_str] = {'version': cpe.get('versionEndExcluding'),
+                                                   'kind': 'excluding'}
 
-            for line in cpe2pkg_lines:
-                if not line:
-                    continue
-                score, ga = line.split()
-                results.append({'ga': ga, 'score': score})
-
-            winner = None
-            for result in results:
-                ga = result['ga']
-                with open('packages') as pf:
-                    for line in pf.readlines():
-                        g, a, v = line.split(',')
-                        if '{}:{}'.format(g, a) == ga:
-                            affected = version & set(v.split())
-                            if affected:
-                                print('Hit!')
-                                result['versions'] = list(set(v.split()))
-                                winner = result
-                                break
-
-            if winner:
-                generate_yaml(cve, winner, results)
+        return cls(cve_id=cve_id,
+                   references=references,
+                   descriptions=descriptions,
+                   configurations=configurations,
+                   cvss=cvss,
+                   published_date=published_date,
+                   last_modified_date=last_modified_date)
 
 
-if __name__ == '__main__':
-    run()
+def cpe_is_app(cpe_str):
+    return cpe_str[len('cpe:/'):][0] == 'a'
+
+
+def extract_vendor_product_version(cpe_str):
+    cpe_parts = cpe_str.split(':')[2:]
+    version = None
+    if len(cpe_parts) >= 3:
+        version = cpe_parts[2]
+
+    return cpe_parts[0], cpe_parts[1], version
