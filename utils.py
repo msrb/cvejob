@@ -1,89 +1,36 @@
 import re
-import os
+from collections import OrderedDict
 
-stop_words = set(['in', 'the', 'a', 'an', 'the', 'when'])
+from nltk.tokenize import sent_tokenize
+
+
+def get_first_sentence(description):
+    """Get only the first sentence from the description."""
+    sentences = sent_tokenize(description)
+    return sentences[0] if sentences else ''
 
 
 def guess_package_name(description):
-    # TODO: rewrite+fix
-    regexp = re.compile('.*\. ')
-    match = regexp.match(description)
-    if not match:
-        regexp = re.compile('.*\.$')
-        match = regexp.match(description)
-    if not match:
-        return ''
+    """Guess package name from given description.
 
-    first_sentence = match.group()
-    regexp = re.compile('[A-Z][A-Za-z0-9-:]*')
-    suspects = regexp.findall(first_sentence)
+    Very naive approach. Words starting with uppercase letter
+    are considered to be possible package names (minus stop words).
 
-    result = []
-    for s in suspects:
-        if not s.lower() in stop_words:
-            result.append(s.lower())
-            if len(result) == 3:
-                break
+    Returns a list of possible package names, without duplicates.
+    """
 
-    return set(result)
+    stop_words = {'in', 'the', 'a', 'an', 'the', 'when'}
 
+    regexp = re.compile('[A-Z][A-Za-z0-9-:]*')  # ? TODO: tweak
+    suspects = regexp.findall(description)
 
-def generate_yaml(cve, winner, results):
-    template = """---
-cve: {cve_id}
-title: CVE in {pkg_name}
-description: >
-    {desc}
-cvss_v2: {cvss}
-references:
-    - {refs}
-affected:
-    - groupId: {g}
-      artifactId: {a}
-      version:
-        - "{v}"
-      fixedin:
-        - "{fixed_in}"
+    results = []
 
-# Additional information:
-#  configurations:
-{configurations}
-#
-# All available versions:
-#versions
-#
-# Other possible package names:
-{others}
-"""
+    if not suspects:
+        return results
 
-    _, year, cid = cve.cve_id.split('-')
-    try:
-        os.makedirs('database/java/{y}'.format(y=year))
-    except FileExistsError:
-        pass
+    results = [x.lower() for x in suspects if x.lower() not in stop_words]
+    # get rid of duplicates, but keep order
+    results = list(OrderedDict.fromkeys(results))
 
-    with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
-        g, a = winner['ga'].split(':')
-        refs = '    - '.join([x + '\n' for x in cve.references])
-        description = ''
-        if cve.descriptions:
-            description = cve.descriptions[0]
-
-        confs = []
-        for conf in cve.configurations:
-            conf_str = '#    - {cpe}'.format(cpe=conf)
-            v = cve.configurations[conf]
-            if v and v['version']:
-                conf_str += " " + v['version'] + " (" + v['kind'] + ")"
-            confs.append(conf_str)
-
-        others = []
-        for result in results:
-            other_str = "# " + result['score'] + ' ' + result['ga']
-            others.append(other_str)
-
-        data = template.format(cve_id=cve.cve_id, pkg_name=winner['ga'], cvss=cve.cvss,
-                               desc=description, g=g, a=a, v='!FIXME!',
-                               refs=refs, fixed_in='!FIXME!', configurations='\n'.join(confs),
-                               others='\n'.join(others))
-        f.write(data)
+    return results

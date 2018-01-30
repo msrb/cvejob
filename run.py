@@ -1,7 +1,8 @@
 import json
 import subprocess
 import datetime
-from utils import guess_package_name, generate_yaml
+from utils import get_first_sentence, guess_package_name
+from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
 
 
@@ -41,8 +42,9 @@ def run():
 
             pkg_name_candidates = set()
             for description in cve.descriptions:
-                names = guess_package_name(description)
-                pkg_name_candidates.update(names)
+                first_sentence = get_first_sentence(description)
+                names = guess_package_name(first_sentence)
+                pkg_name_candidates.update(set(names))
 
             product += list(pkg_name_candidates)
             if not product or not vendor:
