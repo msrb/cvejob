@@ -1,5 +1,6 @@
 """Handle cve entries from NVD database."""
 
+from cpe import CPE
 import datetime
 
 from collections import OrderedDict
@@ -101,7 +102,7 @@ class CVE(object):
 
 def cpe_is_app(cpe_str):
     """Return True if cpe is of application entry type."""
-    return cpe_str[len('cpe:/'):][0] == 'a'
+    return CPE(cpe_str).is_application()
 
 
 def cpe_is_type(cpe_str, entry_type=''):
@@ -112,12 +113,8 @@ def cpe_is_type(cpe_str, entry_type=''):
 
 def extract_vendor_product_version(cpe_str):
     """Extract vendor and product from NVD cve entry."""
-    cpe_parts = cpe_str.split(':')[2:]
-    version = None
-    if len(cpe_parts) >= 3:
-        version = cpe_parts[2]
-
-    return cpe_parts[0], cpe_parts[1], version
+    cpe_ = CPE(cpe_str)
+    return cpe_.get_vendor()[0], cpe_.get_product()[0], cpe_.get_version()[0]
 
 
 def extract_entries_by_type(cve_items: list, entry_type: str = '') -> list:
