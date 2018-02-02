@@ -1,4 +1,4 @@
-"""Handle cve entries from NVD database"""
+"""Handle cve entries from NVD database."""
 
 import datetime
 
@@ -6,7 +6,8 @@ from collections import OrderedDict
 
 
 class CVE(object):
-    """CVE object holding relevant atributes about the given cve"""
+    """CVE object holding relevant atributes about the given cve."""
+
     # TODO: think about inheriting from dict or DataFrame for future usage
 
     VERSION = '4.0'
@@ -14,7 +15,7 @@ class CVE(object):
     def __init__(self, cve_id: str, references: list,
                  description: str, configurations: dict,
                  cvss, published_date: str, last_modified_date: str):
-
+        """Initialize CVE object from NVD cve entry."""
         # TODO group_id, artifact_id
         self.cve_id = cve_id
         self.references = references or []
@@ -27,10 +28,11 @@ class CVE(object):
         self.dct = self._construct_dct()
 
     def __str__(self):
+        """Return string representation of dictionary holding object attributes."""
         return self.dct.__str__()  # TODO maybe dump to json string?
 
     def _construct_dct(self):
-        """Construct dictionary from self attributes by NVD schema"""
+        """Construct dictionary from self attributes by NVD schema."""
         dct = OrderedDict()
 
         dct['cve_id'] = self.cve_id
@@ -45,10 +47,11 @@ class CVE(object):
 
     @classmethod
     def from_dict(cls, data):
-
+        """Initialize class from cve json dictionary."""
         date_format = '%Y-%m-%dT%H:%MZ'
         published_date = datetime.datetime.strptime(data.get('publishedDate'), date_format)
-        last_modified_date = datetime.datetime.strptime(data.get('lastModifiedDate'), date_format)
+        last_modified_date = datetime.datetime.strptime(
+            data.get('lastModifiedDate'), date_format)
 
         cve_dict = data.get('cve', {})
 
@@ -97,11 +100,12 @@ class CVE(object):
 
 
 def cpe_is_app(cpe_str):
-    """Return True if cpe is of application entry type"""
+    """Return True if cpe is of application entry type."""
     return cpe_str[len('cpe:/'):][0] == 'a'
 
 
 def extract_vendor_product_version(cpe_str):
+    """Extract vendor and product from NVD cve entry."""
     cpe_parts = cpe_str.split(':')[2:]
     version = None
     if len(cpe_parts) >= 3:
@@ -112,14 +116,13 @@ def extract_vendor_product_version(cpe_str):
 
 def extract_entries_by_type(cve_items: list, entry_type: str = '') -> list:
     """
-    Extract entries from a list of cve dictionaries by specific entry type
+    Extract entries from a list of cve dictionaries by specific entry type.
 
     :param cve_items: list of cve dictionary items
     :param entry_type: str, {application, hardware} or abbreviation of them (default '')
 
     :returns: list of cve entries matching the given entry type
     """
-
     # TODO: think about taking file / json instead of list of cve_items
 
     cve_entries = list()
