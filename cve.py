@@ -104,6 +104,12 @@ def cpe_is_app(cpe_str):
     return cpe_str[len('cpe:/'):][0] == 'a'
 
 
+def cpe_is_type(cpe_str, entry_type=''):
+    """Return True if cpe is of specified entry type."""
+    cpe_type = "cpe:/{entry_type}".format(entry_type=entry_type[:1] or '')
+
+    return cpe_str.startswith(cpe_type)
+
 def extract_vendor_product_version(cpe_str):
     """Extract vendor and product from NVD cve entry."""
     cpe_parts = cpe_str.split(':')[2:]
@@ -133,8 +139,7 @@ def extract_entries_by_type(cve_items: list, entry_type: str = '') -> list:
             for cpe in cpes:
                 if cpe.get('vulnerable', True):
                     cpe_str = cpe.get('cpe22Uri')
-                    cpe_type = "cpe:/{entry_type}".format(entry_type=entry_type[:1] or '')
-                    if cpe_str.startswith(cpe_type):
+                    if cpe_is_type(cpe_str=cpe_str, entry_type=entry_type):
                         cve = CVE.from_dict(entry)
                         cve_entries.append(cve)
 
