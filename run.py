@@ -91,7 +91,7 @@ def run():
             logger.info('Found {cve}'.format(cve=cve.cve_id))
 
             # TODO: make configurable
-            age = os.environ.get('CVEJOB_AGE', 1)
+            age = int(os.environ.get('CVEJOB_AGE', 1))
             if is_older_than(cve, age):
                 logger.info('The CVE is too old, skipping...')
                 continue
