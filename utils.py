@@ -2,7 +2,9 @@ import re
 import logging
 from collections import OrderedDict
 
+import nltk
 from nltk.tokenize import sent_tokenize
+from nltk.corpus import stopwords
 from lxml import etree
 
 
@@ -24,7 +26,15 @@ def guess_package_name(description):
     Returns a list of possible package names, without duplicates.
     """
 
-    stop_words = {'in', 'the', 'a', 'an', 'the', 'when'}
+    stop_words = set()
+
+    try:
+        # Fails when no downloaded stopwords are available.
+        stop_words.update(stopwords.words('english'))
+    except LookupError:
+        # Download stopwords since they are not available.
+        nltk.download('stopwords')
+        stop_words.update(stopwords.words('english'))
 
     regexp = re.compile('[A-Z][A-Za-z0-9-:]*')  # ? TODO: tweak
     suspects = regexp.findall(description)
