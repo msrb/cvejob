@@ -44,10 +44,9 @@ def get_vendor_product_versions(cve):
 def get_package_name_candidates(cve):
     """Try to identify possible package names in the CVE's description."""
     pkg_name_candidates = set()
-    for description in cve.descriptions:
-        first_sentence = get_first_sentence(description)
-        names = guess_package_name(first_sentence)
-        pkg_name_candidates.update(set(names))
+    first_sentence = get_first_sentence(cve.description)
+    names = guess_package_name(first_sentence)
+    pkg_name_candidates.update(set(names))
     return pkg_name_candidates
 
 
