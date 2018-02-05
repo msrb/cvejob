@@ -38,9 +38,7 @@ affected:
     with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
         g, a = winner['ga'].split(':')
         refs = '    - '.join([x + '\n' for x in cve.references])
-        description = ''
-        if cve.descriptions:
-            description = cve.descriptions[0]
+        description = cve.description
 
         confs = []
         for conf in cve.configurations:
