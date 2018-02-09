@@ -56,15 +56,25 @@ def get_versions(ga):
 
     g, a = ga.split(':')
     g = g.replace('.', '/')
-    url = 'http://repo1.maven.org/maven2/{g}/{a}/maven-metadata.xml'.format(g=g, a=a)
 
-    versions = []
-    try:
-        metadata_xml = etree.parse(url)
-        version_elements = metadata_xml.findall('.//version')
-        versions = [x.text for x in version_elements]
-    except OSError:
+    filenames = {'maven-metadata.xml', 'maven-metadata-local.xml'}
+
+    versions = {}
+    ok = False
+    for filename in filenames:
+
+        url = 'http://repo1.maven.org/maven2/{g}/{a}/{f}'.format(g=g, a=a, f=filename)
+
+        try:
+            metadata_xml = etree.parse(url)
+            ok = True  # We successfully downloaded the file
+            version_elements = metadata_xml.findall('.//version')
+            versions.update({x.text for x in version_elements})
+        except OSError:
+            # Not both XML files have to exist, so don't freak out yet
+            pass
+
+    if not ok:
         logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
-        pass
 
-    return versions
+    return list(versions)
