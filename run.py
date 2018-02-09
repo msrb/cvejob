@@ -75,7 +75,7 @@ def run_cpe2pkg(query):
         results.append({'ga': ga, 'score': score})
 
     if results:
-        logger.info('Found {n} suspects.'.format(n=len(results)))
+        logger.info('Found {n} suspects'.format(n=len(results)))
 
     return results
 
@@ -129,6 +129,9 @@ def run():
                 ga = result['ga']
 
                 upstream_versions = get_versions(ga)
+                logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
+                                                                             v=upstream_versions,
+                                                                             cv=cpe_versions))
 
                 # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
                 # if not, this is a false positive
