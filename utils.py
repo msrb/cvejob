@@ -59,7 +59,7 @@ def get_versions(ga):
 
     filenames = {'maven-metadata.xml', 'maven-metadata-local.xml'}
 
-    versions = {}
+    versions = set()
     ok = False
     for filename in filenames:
 
@@ -69,7 +69,7 @@ def get_versions(ga):
             metadata_xml = etree.parse(url)
             ok = True  # We successfully downloaded the file
             version_elements = metadata_xml.findall('.//version')
-            versions.update({x.text for x in version_elements})
+            versions = versions.union({x.text for x in version_elements})
         except OSError:
             # Not both XML files have to exist, so don't freak out yet
             pass
