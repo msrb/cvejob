@@ -83,7 +83,7 @@ def run_cpe2pkg(query):
 # TODO: turn into proper CLI app
 def run():
 
-    cherrypicked = os.environ.get('CVE_ID')
+    cherrypicked = os.environ.get('CVE_ID', '').strip()
 
     # TODO: make configurable
     with open('nvdcve.json') as f:
