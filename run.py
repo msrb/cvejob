@@ -74,6 +74,9 @@ def run_cpe2pkg(query):
         score, ga = line.split()
         results.append({'ga': ga, 'score': score})
 
+    if results:
+        logger.info('Found {n} suspects.'.format(n=len(results)))
+
     return results
 
 
