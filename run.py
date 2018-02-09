@@ -79,6 +79,9 @@ def run_cpe2pkg(query):
 
 # TODO: turn into proper CLI app
 def run():
+
+    cherrypicked = os.environ.get('CVE_ID')
+
     # TODO: make configurable
     with open('nvdcve.json') as f:
         data = json.load(f)
@@ -89,9 +92,12 @@ def run():
             logger.info('---')
             logger.info('Found {cve}'.format(cve=cve.cve_id))
 
-            # TODO: make configurable
             age = int(os.environ.get('CVEJOB_AGE', 1))
-            if is_older_than(cve, age):
+
+            if cherrypicked:
+                if cve.cve_id != cherrypicked:
+                    continue
+            elif is_older_than(cve, age):
                 logger.info('The CVE is too old, skipping...')
                 continue
 
