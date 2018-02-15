@@ -47,6 +47,30 @@ class CVE(object):
         return dct
 
     @classmethod
+    def _get_configuration(cls, node):
+
+        configurations = {}
+
+        if 'children' in node and node.get('children'):
+            for child_node in node.get('children'):
+                configurations.update(cls._get_configuration(child_node))
+
+        cpes = node.get('cpe', [])
+        for cpe in cpes:
+            if cpe.get('vulnerable', True):
+                cpe_str = cpe.get('cpe22Uri')
+                if cpe_str:
+                    configurations[cpe_str] = None
+                if cpe.get('versionEndIncluding') is not None:
+                    configurations[cpe_str] = {'version': cpe.get('versionEndIncluding'),
+                                               'kind': 'including'}
+                elif cpe.get('versionEndExcluding') is not None:
+                    configurations[cpe_str] = {'version': cpe.get('versionEndExcluding'),
+                                               'kind': 'excluding'}
+        return configurations
+
+
+    @classmethod
     def from_dict(cls, data):
         """Initialize class from cve json dictionary."""
         date_format = '%Y-%m-%dT%H:%MZ'
@@ -78,18 +102,7 @@ class CVE(object):
         configurations = {}
         nodes = data.get('configurations', {}).get('nodes', [])
         for node in nodes:
-            cpes = node.get('cpe', [])
-            for cpe in cpes:
-                if cpe.get('vulnerable', True):
-                    cpe_str = cpe.get('cpe22Uri')
-                    if cpe_str:
-                        configurations[cpe_str] = None
-                    if cpe.get('versionEndIncluding') is not None:
-                        configurations[cpe_str] = {'version': cpe.get('versionEndIncluding'),
-                                                   'kind': 'including'}
-                    elif cpe.get('versionEndExcluding') is not None:
-                        configurations[cpe_str] = {'version': cpe.get('versionEndExcluding'),
-                                                   'kind': 'excluding'}
+            configurations.update(cls._get_configuration(node))
 
         return cls(cve_id=cve_id,
                    references=references,
