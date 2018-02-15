@@ -124,6 +124,7 @@ def cpe_is_type(cpe_str, entry_type=''):
 
     return cpe_str.startswith(cpe_type)
 
+
 def extract_vendor_product_version(cpe_str):
     """Extract vendor and product from NVD cve entry."""
     cpe_ = CPE(cpe_str)

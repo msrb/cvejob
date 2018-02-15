@@ -128,17 +128,28 @@ def run():
             for result in results:
                 ga = result['ga']
 
+                # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
+                # if not, this is a false positive
                 upstream_versions = get_versions(ga)
                 logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
                                                                              v=upstream_versions,
                                                                              cv=cpe_versions))
-
-                # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
-                # if not, this is a false positive
                 if cpe_versions & set(upstream_versions):
+                    # exact match, great!
+                    winner = result
+                else:
+                    # FIXME: hack, just for testing...
+                    for cpe_version in cpe_versions:
+                        for upstream_version in upstream_versions:
+                            if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
+                                version_suffix = upstream_version[len(cpe_version):].lstrip(['.', '-', '_'])
+                                if not version_suffix and version_suffix[0].isdigit():
+                                    winner = result
+                                    break
+
+                if winner:
                     logger.info('Hit for {ga}'.format(ga=ga))
                     result['versions'] = upstream_versions
-                    winner = result
                     break
 
             if winner:
