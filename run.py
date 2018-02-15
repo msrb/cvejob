@@ -34,7 +34,8 @@ def get_vendor_product_versions(cve):
         ven, prod, ver = extract_vendor_product_version(conf)
         vendor.append(ven)
         product.append(prod)
-        cpe_versions.add(ver)
+        if ver:
+            cpe_versions.add(ver)
         if cve.configurations[conf]:
             cpe_versions.add(cve.configurations[conf]['version'])
 
@@ -122,38 +123,40 @@ def run():
 
             results = run_cpe2pkg(query)
 
-            # try to exclude false positives
-            # winner is simply the first match we found
-            winner = None
-            for result in results:
-                ga = result['ga']
+            if cpe_versions:
+                # try to exclude false positives
+                # winner is simply the first match we found
+                winner = None
+                for result in results:
+                    ga = result['ga']
 
-                # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
-                # if not, this is a false positive
-                upstream_versions = get_versions(ga)
-                logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
-                                                                             v=upstream_versions,
-                                                                             cv=cpe_versions))
-                if cpe_versions & set(upstream_versions):
-                    # exact match, great!
-                    winner = result
-                else:
-                    # FIXME: hack, just for testing...
-                    for cpe_version in cpe_versions:
-                        for upstream_version in upstream_versions:
-                            if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
-                                version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
-                                if not version_suffix and version_suffix[0].isdigit():
-                                    winner = result
-                                    break
+                    # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
+                    # if not, this is a false positive
+                    upstream_versions = get_versions(ga)
+                    logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
+                                                                                 v=upstream_versions,
+                                                                                 cv=cpe_versions))
+                    if cpe_versions & set(upstream_versions):
+                        # exact match, great!
+                        winner = result
+                    else:
+                        # FIXME: hack, just for testing...
+                        for cpe_version in cpe_versions:
+                            for upstream_version in upstream_versions:
+                                logger.info('{c} ? {u}'.format(c=cpe_version, u=upstream_version))
+                                if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
+                                    version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
+                                    if not version_suffix and version_suffix[0].isdigit():
+                                        winner = result
+                                        break
+
+                    if winner:
+                        logger.info('Hit for {ga}'.format(ga=ga))
+                        result['versions'] = upstream_versions
+                        break
 
                 if winner:
-                    logger.info('Hit for {ga}'.format(ga=ga))
-                    result['versions'] = upstream_versions
-                    break
-
-            if winner:
-                generate_yaml(cve, winner, results)
+                    generate_yaml(cve, winner, results)
 
 
 if __name__ == '__main__':
