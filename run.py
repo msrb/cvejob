@@ -142,7 +142,7 @@ def run():
                     for cpe_version in cpe_versions:
                         for upstream_version in upstream_versions:
                             if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
-                                version_suffix = upstream_version[len(cpe_version):].lstrip(['.', '-', '_'])
+                                version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
                                 if not version_suffix and version_suffix[0].isdigit():
                                     winner = result
                                     break
