@@ -143,10 +143,9 @@ def run():
                         # FIXME: hack, just for testing...
                         for cpe_version in cpe_versions:
                             for upstream_version in upstream_versions:
-                                logger.info('{c} ? {u}'.format(c=cpe_version, u=upstream_version))
                                 if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
                                     version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
-                                    if not version_suffix and version_suffix[0].isdigit():
+                                    if version_suffix and not version_suffix[0].isdigit():
                                         winner = result
                                         break
 
