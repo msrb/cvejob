@@ -113,7 +113,7 @@ def run():
             pkg_name_candidates = get_package_name_candidates(cve)
 
             product = list(OrderedDict.fromkeys(product + list(pkg_name_candidates)))
-            vendor = list(OrderedDict.fromkeys(vendor))
+            vendor = list(OrderedDict.fromkeys(vendor + list(pkg_name_candidates)))
 
             if not product or not vendor:
                 continue

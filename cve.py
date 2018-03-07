@@ -155,4 +155,3 @@ def extract_entries_by_type(cve_items: list, entry_type: str = '') -> list:
                         cve_entries.append(cve)
 
     return cve_entries
-
