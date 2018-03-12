@@ -53,7 +53,7 @@ affected:
             other_str = "# " + result['score'] + ' ' + result['ga']
             others.append(other_str)
 
-        data = template.format(cve_id=cve.cve_id, pkg_name=winner['ga'], cvss=cve.cvss,
+        data = template.format(cve_id=cve.cve_id.split('-', 1)[1], pkg_name=winner['ga'], cvss=cve.cvss,
                                desc=description, g=g, a=a, v='!FIXME!',
                                refs=refs, fixed_in='!FIXME!', configurations='\n'.join(confs),
                                others='\n'.join(others))
