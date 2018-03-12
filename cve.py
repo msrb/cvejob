@@ -57,16 +57,15 @@ class CVE(object):
 
         cpes = node.get('cpe', [])
         for cpe in cpes:
-            if cpe.get('vulnerable', True):
-                cpe_str = cpe.get('cpe22Uri')
-                if cpe_str:
-                    configurations[cpe_str] = None
-                if cpe.get('versionEndIncluding') is not None:
-                    configurations[cpe_str] = {'version': cpe.get('versionEndIncluding'),
-                                               'kind': 'including'}
-                elif cpe.get('versionEndExcluding') is not None:
-                    configurations[cpe_str] = {'version': cpe.get('versionEndExcluding'),
-                                               'kind': 'excluding'}
+            cpe_str = cpe.get('cpe22Uri')
+            if cpe_str:
+                configurations[cpe_str] = None
+            if cpe.get('versionEndIncluding') is not None:
+                configurations[cpe_str] = {'version': cpe.get('versionEndIncluding'),
+                                           'kind': 'including'}
+            elif cpe.get('versionEndExcluding') is not None:
+                configurations[cpe_str] = {'version': cpe.get('versionEndExcluding'),
+                                           'kind': 'excluding'}
         return configurations
 
 
