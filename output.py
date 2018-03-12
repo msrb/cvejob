@@ -17,7 +17,6 @@ affected:
         - "{v}"
       fixedin:
         - "{fixed_in}"
-
 # Additional information:
 #  configurations:
 {configurations}
