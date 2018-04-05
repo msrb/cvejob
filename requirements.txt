@@ -1,3 +1,4 @@
 cpe
 lxml
 nltk
+beautifulsoup4

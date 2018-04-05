@@ -2,6 +2,8 @@ import re
 import logging
 from collections import OrderedDict
 
+import requests
+import json
 import nltk
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
@@ -51,7 +53,7 @@ def guess_package_name(description):
     return results
 
 
-def get_versions(ga):
+def get_maven_versions(ga):
     """Get all versions for given groupId:artifactId."""
 
     g, a = ga.split(':')
@@ -78,3 +80,14 @@ def get_versions(ga):
         logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
 
     return list(versions)
+
+
+def get_pypi_versions(pkg_name):
+    pypi_package_url = 'https://pypi.python.org/pypi/{pkg_name}/json'.format(pkg_name=pkg_name)
+
+    response = requests.get(pypi_package_url)
+    if response.status_code != 200:
+        logger.error('Unable to obtain a list of versions for {pkg_name}'.format(pkg_name=pkg_name))
+        return []
+
+    return list({x for x in response.json().get('releases', {})})

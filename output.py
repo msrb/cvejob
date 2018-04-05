@@ -11,8 +11,7 @@ cvss_v2: {cvss}
 references:
     - {refs}
 affected:
-    - groupId: {g}
-      artifactId: {a}
+    - name: {pkg}
       version:
         - "{v}"
       fixedin:
@@ -35,7 +34,7 @@ affected:
         pass
 
     with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
-        g, a = winner['ga'].split(':')
+        pkg = winner['ga']
         refs = '    - '.join([x + '\n' for x in cve.references])
         description = cve.description
 
@@ -53,7 +52,7 @@ affected:
             others.append(other_str)
 
         data = template.format(cve_id=cve.cve_id.split('-', 1)[1], pkg_name=winner['ga'], cvss=cve.cvss,
-                               desc=description, g=g, a=a, v='!FIXME!',
+                               desc=description, pkg=pkg, v='!FIXME!',
                                refs=refs, fixed_in='!FIXME!', configurations='\n'.join(confs),
                                others='\n'.join(others))
         f.write(data)
