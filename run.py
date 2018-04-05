@@ -8,7 +8,7 @@ from collections import OrderedDict
 from utils import get_first_sentence, guess_package_name, get_pypi_versions
 from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
-from packaging.version import Version, parse
+from packaging.version import Version, InvalidVersion
 
 
 logging.basicConfig(level=logging.INFO)
@@ -140,9 +140,13 @@ def run():
 
                     for cpe_version in cpe_versions:
                         for upstream_version in upstream_versions:
-                            if Version(upstream_version) == Version(cpe_version):
-                                winner = result
-                                break
+                            try:
+                                if Version(upstream_version) == Version(cpe_version):
+                                    winner = result
+                                    break
+                            except InvalidVersion:
+                                # this is OK
+                                pass
 
                     if winner:
                         logger.info('Hit for {ga}'.format(ga=ga))
