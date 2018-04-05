@@ -3,3 +3,4 @@ lxml
 nltk
 beautifulsoup4
 requests
+packaging

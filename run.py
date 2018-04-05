@@ -8,6 +8,7 @@ from collections import OrderedDict
 from utils import get_first_sentence, guess_package_name, get_pypi_versions
 from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
+from packaging.version import Version, parse
 
 
 logging.basicConfig(level=logging.INFO)
@@ -136,18 +137,12 @@ def run():
                     logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
                                                                                  v=upstream_versions,
                                                                                  cv=cpe_versions))
-                    if cpe_versions & set(upstream_versions):
-                        # exact match, great!
-                        winner = result
-                    else:
-                        # FIXME: hack, just for testing...
-                        for cpe_version in cpe_versions:
-                            for upstream_version in upstream_versions:
-                                if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
-                                    version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
-                                    if version_suffix and not version_suffix[0].isdigit():
-                                        winner = result
-                                        break
+
+                    for cpe_version in cpe_versions:
+                        for upstream_version in upstream_versions:
+                            if Version(upstream_version) == Version(cpe_version):
+                                winner = result
+                                break
 
                     if winner:
                         logger.info('Hit for {ga}'.format(ga=ga))
