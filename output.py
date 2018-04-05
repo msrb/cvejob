@@ -29,11 +29,11 @@ affected:
 
     _, year, cid = cve.cve_id.split('-')
     try:
-        os.makedirs('database/java/{y}'.format(y=year))
+        os.makedirs('database/python/{y}'.format(y=year))
     except FileExistsError:
         pass
 
-    with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
+    with open('database/python/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
         pkg = winner['ga']
         refs = '    - '.join([x + '\n' for x in cve.references])
         description = cve.description
