@@ -2,3 +2,4 @@ cpe
 lxml
 nltk
 beautifulsoup4
+requests
