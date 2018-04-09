@@ -11,8 +11,7 @@ cvss_v2: {cvss}
 references:
     - {refs}
 affected:
-    - groupId: {g}
-      artifactId: {a}
+    - name: {pkg}
       version:
         - "{v}"
       fixedin:
@@ -30,12 +29,12 @@ affected:
 
     _, year, cid = cve.cve_id.split('-')
     try:
-        os.makedirs('database/java/{y}'.format(y=year))
+        os.makedirs('database/javascript/{y}'.format(y=year))
     except FileExistsError:
         pass
 
-    with open('database/java/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
-        g, a = winner['ga'].split(':')
+    with open('database/javascript/{y}/{id}.yaml'.format(y=year, id=cid), 'w') as f:
+        pkg = winner['ga']
         refs = '    - '.join([x + '\n' for x in cve.references])
         description = cve.description
 
@@ -52,8 +51,8 @@ affected:
             other_str = "# " + result['score'] + ' ' + result['ga']
             others.append(other_str)
 
-        data = template.format(cve_id=cve.cve_id.split('-', 1)[1], pkg_name=winner['ga'], cvss=cve.cvss,
-                               desc=description, g=g, a=a, v='!FIXME!',
+        data = template.format(cve_id=cve.cve_id.split('-', 1)[1], pkg_name=pkg, cvss=cve.cvss,
+                               desc=description, pkg=pkg, v='!FIXME!',
                                refs=refs, fixed_in='!FIXME!', configurations='\n'.join(confs),
                                others='\n'.join(others))
         f.write(data)

@@ -5,7 +5,7 @@ import datetime
 import logging
 from collections import OrderedDict
 
-from utils import get_first_sentence, guess_package_name, get_versions
+from utils import get_first_sentence, guess_package_name, get_npm_versions
 from output import generate_yaml
 from cve import CVE, cpe_is_app, extract_vendor_product_version
 
@@ -73,7 +73,7 @@ def run_cpe2pkg(query):
         if not line:
             continue
         score, ga = line.split()
-        results.append({'ga': ga, 'score': score})
+        results.append({'ga': ga[len('npm:'):], 'score': score})
 
     if results:
         logger.info('Found {n} suspects'.format(n=len(results)))
@@ -112,8 +112,8 @@ def run():
             vendor, product, cpe_versions = get_vendor_product_versions(cve)
             pkg_name_candidates = get_package_name_candidates(cve)
 
+            vendor = ['npm']
             product = list(OrderedDict.fromkeys(product + list(pkg_name_candidates)))
-            vendor = list(OrderedDict.fromkeys(vendor + list(pkg_name_candidates)))
 
             if not product or not vendor:
                 continue
@@ -132,22 +132,13 @@ def run():
 
                     # check if at least one version mentioned in the CVE exists for given groupId:artifactId;
                     # if not, this is a false positive
-                    upstream_versions = get_versions(ga)
+                    upstream_versions = get_npm_versions(ga)
                     logger.info('Checking {ga} (upstream: {v}; cpe: {cv}'.format(ga=ga,
                                                                                  v=upstream_versions,
                                                                                  cv=cpe_versions))
                     if cpe_versions & set(upstream_versions):
                         # exact match, great!
                         winner = result
-                    else:
-                        # FIXME: hack, just for testing...
-                        for cpe_version in cpe_versions:
-                            for upstream_version in upstream_versions:
-                                if upstream_version.startswith(cpe_version) and len(upstream_version) > len(cpe_version):
-                                    version_suffix = upstream_version[len(cpe_version):].lstrip('.-_')
-                                    if version_suffix and not version_suffix[0].isdigit():
-                                        winner = result
-                                        break
 
                     if winner:
                         logger.info('Hit for {ga}'.format(ga=ga))

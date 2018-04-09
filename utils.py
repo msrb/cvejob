@@ -5,7 +5,7 @@ from collections import OrderedDict
 import nltk
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
-from lxml import etree
+import requests
 
 
 logger = logging.getLogger(__name__)
@@ -51,30 +51,17 @@ def guess_package_name(description):
     return results
 
 
-def get_versions(ga):
-    """Get all versions for given groupId:artifactId."""
+def get_npm_versions(ga):
+    """Get all versions for given package name."""
 
-    g, a = ga.split(':')
-    g = g.replace('.', '/')
+    url = 'https://registry.npmjs.org/{pkg_name}'.format(pkg_name=ga)
 
-    filenames = {'maven-metadata.xml', 'maven-metadata-local.xml'}
+    response = requests.get(url)
 
-    versions = set()
-    ok = False
-    for filename in filenames:
+    if response.status_code != 200:
+        logger.error('Unable to fetch versions for package {pkg_name}'.format(pkg_name=ga))
+        return []
 
-        url = 'http://repo1.maven.org/maven2/{g}/{a}/{f}'.format(g=g, a=a, f=filename)
-
-        try:
-            metadata_xml = etree.parse(url)
-            ok = True  # We successfully downloaded the file
-            version_elements = metadata_xml.findall('.//version')
-            versions = versions.union({x.text for x in version_elements})
-        except OSError:
-            # Not both XML files have to exist, so don't freak out yet
-            pass
-
-    if not ok:
-        logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
+    versions = {x for x in response.json().get('versions')}
 
     return list(versions)
