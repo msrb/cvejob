@@ -110,7 +110,8 @@ def run():
                 continue
 
             vendor, product, cpe_versions = get_vendor_product_versions(cve)
-            pkg_name_candidates = get_package_name_candidates(cve)
+            # pkg_name_candidates = get_package_name_candidates(cve)
+            pkg_name_candidates = set()
 
             vendor = ['npm']
             product = list(OrderedDict.fromkeys(product + list(pkg_name_candidates)))
