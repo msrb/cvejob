@@ -27,7 +27,7 @@ for f in ${files}; do
 
     curl -X POST -H 'Content-Type: application/json' -H "Authorization: token $GITHUB_TOKEN" -d "\
     { \
-        \"title\": \"Add $cve_id\", \
+        \"title\": \"[${CVEJOB_ECOSYSTEM:-python}] Add $cve_id\", \
         \"body\": \"\", \
         \"head\": \"${branch}\", \
         \"base\": \"master\" \

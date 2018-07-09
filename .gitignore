@@ -2,5 +2,8 @@ target/
 database/
 __pycache__
 nvdcve.json
-packages
 .idea/
+data/
+cpe2pkg.jar
+.pytest_cache/
+venv/
