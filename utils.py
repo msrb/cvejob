@@ -62,6 +62,9 @@ def get_npm_versions(ga):
         logger.error('Unable to fetch versions for package {pkg_name}'.format(pkg_name=ga))
         return []
 
-    versions = {x for x in response.json().get('versions')}
+    versions = set()
+    response_json = response.json()
+    if response_json and response_json.get('versions'):
+        versions = {x for x in response_json.get('versions')}
 
     return list(versions)
